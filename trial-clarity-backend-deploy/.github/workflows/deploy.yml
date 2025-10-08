@@ -1,0 +1,37 @@
+name: Backend
+
+on:
+  push:
+    branches: deploy
+
+jobs:
+  build:
+    runs-on: trail-clarity-backend
+
+    steps:
+      - name: Clone repositories
+        uses: actions/checkout@v4
+        with:
+          path: 'deploy'
+
+      - name: Setting Environment Values
+        run: |
+          sudo mv deploy/.env.deploy .env
+      
+      - name: Moving Server File
+        run: |
+          sudo mv deploy/server.py server.py
+
+      - name: Install the latest version of uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Installing Packages
+        run: |
+          cd deploy
+          source /home/azureuser/.venv/bin/activate
+          uv pip compile pyproject.toml -o requirements.txt
+          pip install -r requirements.txt
+
+      - name: Restart Service
+        run: |
+          sudo service trial-clarity-backend restart
